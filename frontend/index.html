@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | PG Management System</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Ambient Glow Background -->
+    <div class="ambient-bg">
+        <div class="ambient-glow-1"></div>
+        <div class="ambient-glow-2"></div>
+    </div>
+
+    <div class="dashboard-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand-section">
+                <div class="brand-icon">🏠</div>
+                <div class="brand-name">Hostel PG</div>
+            </div>
+
+            <ul class="nav-list">
+                <li class="nav-item active" data-tab="overview">
+                    <span class="nav-icon">📊</span> Overview
+                </li>
+                <li class="nav-item" data-tab="rooms">
+                    <span class="nav-icon">🏢</span> Rooms
+                </li>
+                <li class="nav-item" data-tab="students">
+                    <span class="nav-icon">🎓</span> Students
+                </li>
+                <li class="nav-item" data-tab="workers">
+                    <span class="nav-icon">🧑‍💼</span> Staff Workers
+                </li>
+                <li class="nav-item" data-tab="payments">
+                    <span class="nav-icon">💳</span> Payments
+                </li>
+                <li class="nav-item" data-tab="reports">
+                    <span class="nav-icon">🛠️</span> Reports
+                </li>
+            </ul>
+
+            <div class="user-profile-widget">
+                <div class="user-info">
+                    <div class="avatar-circle" id="user-avatar">A</div>
+                    <div class="user-details">
+                        <div class="name" id="user-name">Admin</div>
+                        <div class="role" id="user-role">Worker</div>
+                    </div>
+                </div>
+                <button class="btn-logout" id="btn-logout" title="Sign Out">🚪</button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-wrapper">
+            <div class="top-bar">
+                <h1 class="page-title" id="page-title">Overview</h1>
+                <div style="display:flex; gap:12px;">
+                    <button class="btn-primary" style="width:auto; padding:10px 18px;" data-modal-open="modal-add-student">+ Register Student</button>
+                </div>
+            </div>
+
+            <!-- Stats Overview Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <div class="title">Total Rooms</div>
+                        <div class="value" id="stat-total-rooms">0</div>
+                    </div>
+                    <div class="stat-icon icon-blue">🏢</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <div class="title">Occupancy Rate</div>
+                        <div class="value" id="stat-occupancy-rate">0%</div>
+                    </div>
+                    <div class="stat-icon icon-emerald">📈</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <div class="title">Total Students</div>
+                        <div class="value" id="stat-total-students">0</div>
+                    </div>
+                    <div class="stat-icon icon-purple">🎓</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <div class="title">Total Revenue</div>
+                        <div class="value" id="stat-total-revenue">$0</div>
+                    </div>
+                    <div class="stat-icon icon-amber">💰</div>
+                </div>
+            </div>
+
+            <!-- TAB 1: OVERVIEW -->
+            <div class="tab-content active" id="tab-overview">
+                <div class="section-header">
+                    <div class="section-title">Hostel Room Inventory</div>
+                    <button class="btn-secondary" data-modal-open="modal-add-room">+ Add Room</button>
+                </div>
+                <div class="room-grid" id="rooms-grid-container">
+                    <!-- Dynamic Room Cards -->
+                </div>
+            </div>
+
+            <!-- TAB 2: ROOMS -->
+            <div class="tab-content" id="tab-rooms">
+                <div class="section-header">
+                    <div class="section-title">Room Inventory & Capacity</div>
+                    <button class="btn-primary" style="width:auto;" data-modal-open="modal-add-room">+ Add Room</button>
+                </div>
+                <div class="room-grid" id="rooms-grid-container-tab2">
+                    <!-- Synced with Overview -->
+                </div>
+            </div>
+
+            <!-- TAB 3: STUDENTS -->
+            <div class="tab-content" id="tab-students">
+                <div class="section-header">
+                    <div class="section-title">Registered Students</div>
+                    <button class="btn-primary" style="width:auto;" data-modal-open="modal-add-student">+ Register Student</button>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Full Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Assigned Room</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="students-table-body">
+                            <!-- Dynamic Student Rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 4: WORKERS -->
+            <div class="tab-content" id="tab-workers">
+                <div class="section-header">
+                    <div class="section-title">Staff Workers & Admins</div>
+                    <button class="btn-primary" style="width:auto;" data-modal-open="modal-add-worker">+ Register Worker</button>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Full Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                            </tr>
+                        </thead>
+                        <tbody id="workers-table-body">
+                            <!-- Dynamic Worker Rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 5: PAYMENTS -->
+            <div class="tab-content" id="tab-payments">
+                <div class="section-header">
+                    <div class="section-title">Rent Payments & Billing History</div>
+                    <button class="btn-primary" style="width:auto;" data-modal-open="modal-add-payment">+ Record Payment</button>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Student</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                                <th>Method</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="payments-table-body">
+                            <!-- Dynamic Payment Rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 6: REPORTS -->
+            <div class="tab-content" id="tab-reports">
+                <div class="section-header">
+                    <div class="section-title">Maintenance & System Reports</div>
+                    <button class="btn-primary" style="width:auto;" data-modal-open="modal-add-report">+ File Report</button>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Title & Description</th>
+                                <th>Reported By Worker</th>
+                                <th>Status</th>
+                                <th>Created At</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reports-table-body">
+                            <!-- Dynamic Report Rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- MODAL 1: ADD ROOM -->
+    <div class="modal-overlay" id="modal-add-room">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title">Add New Room</div>
+                <button class="modal-close" data-modal-close>✕</button>
+            </div>
+            <form id="form-add-room">
+                <div class="form-group">
+                    <label class="form-label" for="room_number">Room Number</label>
+                    <input type="text" id="room_number" class="form-input" placeholder="e.g. 101 or 302" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="capacity">Capacity (Occupants)</label>
+                    <input type="number" id="capacity" class="form-input" placeholder="e.g. 2" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="rent_amount">Monthly Rent ($)</label>
+                    <input type="number" id="rent_amount" class="form-input" placeholder="e.g. 7500" step="0.01" min="0" required>
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
+                    <button type="button" class="btn-secondary" data-modal-close>Cancel</button>
+                    <button type="submit" class="btn-primary" style="width:auto;">Create Room</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: REGISTER STUDENT -->
+    <div class="modal-overlay" id="modal-add-student">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title">Register New Student</div>
+                <button class="modal-close" data-modal-close>✕</button>
+            </div>
+            <form id="form-add-student">
+                <div class="form-group">
+                    <label class="form-label" for="student_name">Full Name</label>
+                    <input type="text" id="student_name" class="form-input" placeholder="e.g. Alex Smith" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="student_email">Email Address</label>
+                    <input type="email" id="student_email" class="form-input" placeholder="alex@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="student_phone">Phone Number</label>
+                    <input type="text" id="student_phone" class="form-input" placeholder="9988776655" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="student-room-select">Assign Room</label>
+                    <select id="student-room-select" class="form-select">
+                        <option value="">Select Room (Optional)</option>
+                    </select>
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
+                    <button type="button" class="btn-secondary" data-modal-close>Cancel</button>
+                    <button type="submit" class="btn-primary" style="width:auto;">Register Student</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 3: REGISTER WORKER -->
+    <div class="modal-overlay" id="modal-add-worker">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title">Register Worker Staff</div>
+                <button class="modal-close" data-modal-close>✕</button>
+            </div>
+            <form id="form-add-worker">
+                <div class="form-group">
+                    <label class="form-label" for="worker_username">Username</label>
+                    <input type="text" id="worker_username" class="form-input" placeholder="e.g. mark_worker" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="worker_password">Password</label>
+                    <input type="password" id="worker_password" class="form-input" placeholder="••••••••" minlength="6" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="worker_fullname">Full Name</label>
+                    <input type="text" id="worker_fullname" class="form-input" placeholder="e.g. Mark Taylor" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="worker_email">Email Address</label>
+                    <input type="email" id="worker_email" class="form-input" placeholder="mark@pgmanagement.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="worker_phone">Phone Number</label>
+                    <input type="text" id="worker_phone" class="form-input" placeholder="9876543212">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="worker_role">Role</label>
+                    <select id="worker_role" class="form-select">
+                        <option value="worker">Worker</option>
+                        <option value="admin">Administrator</option>
+                    </select>
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
+                    <button type="button" class="btn-secondary" data-modal-close>Cancel</button>
+                    <button type="submit" class="btn-primary" style="width:auto;">Create Account</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 4: RECORD PAYMENT -->
+    <div class="modal-overlay" id="modal-add-payment">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title">Record Rent Payment</div>
+                <button class="modal-close" data-modal-close>✕</button>
+            </div>
+            <form id="form-add-payment">
+                <div class="form-group">
+                    <label class="form-label" for="payment-student-select">Student</label>
+                    <select id="payment-student-select" class="form-select" required>
+                        <option value="">Select Student</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="payment_amount">Amount ($)</label>
+                    <input type="number" id="payment_amount" class="form-input" placeholder="e.g. 7500" step="0.01" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="payment_method">Payment Method</label>
+                    <select id="payment_method" class="form-select">
+                        <option value="UPI">UPI</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                        <option value="Cash">Cash</option>
+                        <option value="Card">Credit/Debit Card</option>
+                    </select>
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
+                    <button type="button" class="btn-secondary" data-modal-close>Cancel</button>
+                    <button type="submit" class="btn-primary" style="width:auto;">Save Payment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 5: FILE REPORT -->
+    <div class="modal-overlay" id="modal-add-report">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title">Submit Maintenance Report</div>
+                <button class="modal-close" data-modal-close>✕</button>
+            </div>
+            <form id="form-add-report">
+                <div class="form-group">
+                    <label class="form-label" for="report_title">Issue Title</label>
+                    <input type="text" id="report_title" class="form-input" placeholder="e.g. Plumbing Leak in 2nd Floor" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="report_description">Detailed Description</label>
+                    <textarea id="report_description" class="form-textarea" rows="4" placeholder="Describe the issue and room number..." required></textarea>
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
+                    <button type="button" class="btn-secondary" data-modal-close>Cancel</button>
+                    <button type="submit" class="btn-primary" style="width:auto;">Submit Ticket</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript Dependencies -->
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
