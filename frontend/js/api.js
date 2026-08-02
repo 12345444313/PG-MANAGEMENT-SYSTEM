@@ -106,6 +106,12 @@ const ApiClient = {
         });
     },
 
+    async deleteRoom(roomId) {
+        return await this.request(`/rooms/${roomId}`, {
+            method: "DELETE"
+        });
+    },
+
     // Students API
     async getStudents() {
         return await this.request("/students");
@@ -115,6 +121,12 @@ const ApiClient = {
         return await this.request("/students", {
             method: "POST",
             body: JSON.stringify(studentData)
+        });
+    },
+
+    async deleteStudent(studentId) {
+        return await this.request(`/students/${studentId}`, {
+            method: "DELETE"
         });
     },
 

@@ -73,6 +73,9 @@ class StudentBase(BaseModel):
     full_name: str
     email: EmailStr
     phone: str
+    father_name: Optional[str] = None
+    father_phone: Optional[str] = None
+    aadhaar_no: Optional[str] = None
     room_id: Optional[int] = None
     joining_date: Optional[date] = None
     status: str = "active"
@@ -95,7 +98,7 @@ class StudentResponse(StudentBase):
 class PaymentBase(BaseModel):
     student_id: int
     amount: float = Field(gt=0)
-    payment_date: Optional[date] = None
+    payment_date: Optional[date] = Field(default_factory=lambda: date.today())
     payment_method: str = "UPI"
     status: str = "completed"
 

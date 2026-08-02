@@ -51,7 +51,7 @@
                         <div class="role" id="user-role">Worker</div>
                     </div>
                 </div>
-                <button class="btn-logout" id="btn-logout" title="Sign Out">🚪</button>
+                <button class="btn-logout" id="btn-logout" type="button">Logout</button>
             </div>
         </aside>
 
@@ -75,24 +75,10 @@
                 </div>
                 <div class="stat-card">
                     <div class="stat-info">
-                        <div class="title">Occupancy Rate</div>
-                        <div class="value" id="stat-occupancy-rate">0%</div>
-                    </div>
-                    <div class="stat-icon icon-emerald">📈</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-info">
                         <div class="title">Total Students</div>
                         <div class="value" id="stat-total-students">0</div>
                     </div>
                     <div class="stat-icon icon-purple">🎓</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-info">
-                        <div class="title">Total Revenue</div>
-                        <div class="value" id="stat-total-revenue">$0</div>
-                    </div>
-                    <div class="stat-icon icon-amber">💰</div>
                 </div>
             </div>
 
@@ -100,10 +86,20 @@
             <div class="tab-content active" id="tab-overview">
                 <div class="section-header">
                     <div class="section-title">Hostel Room Inventory</div>
-                    <button class="btn-secondary" data-modal-open="modal-add-room">+ Add Room</button>
+                    <div class="section-header-actions">
+                        <input type="search" id="rooms-search" class="table-search" placeholder="Search room no...">
+                        <button class="btn-secondary" data-modal-open="modal-add-room">+ Add Room</button>
+                    </div>
                 </div>
                 <div class="room-grid" id="rooms-grid-container">
                     <!-- Dynamic Room Cards -->
+                </div>
+                <div class="room-popup-bubble hidden" id="room-popup-bubble">
+                    <div class="room-popup-header">
+                        <div class="room-popup-title">Selected Room Residents</div>
+                        <button type="button" class="room-popup-close" id="room-popup-close">✕</button>
+                    </div>
+                    <div id="room-detail-content" class="room-detail-content">Select a room card to view its students.</div>
                 </div>
             </div>
 
@@ -122,7 +118,10 @@
             <div class="tab-content" id="tab-students">
                 <div class="section-header">
                     <div class="section-title">Registered Students</div>
-                    <button class="btn-primary" style="width:auto;" data-modal-open="modal-add-student">+ Register Student</button>
+                    <div class="section-header-actions">
+                        <input type="search" id="students-search" class="table-search" placeholder="Search student...">
+                        <button class="btn-primary" style="width:auto;" data-modal-open="modal-add-student">+ Register Student</button>
+                    </div>
                 </div>
                 <div class="table-container">
                     <table class="data-table">
@@ -130,10 +129,15 @@
                             <tr>
                                 <th>ID</th>
                                 <th>Full Name</th>
+                                <th>Father's Name</th>
+                                <th>Aadhar No</th>
                                 <th>Email</th>
                                 <th>Phone</th>
+                                <th>Father's Phone</th>
                                 <th>Assigned Room</th>
                                 <th>Status</th>
+                                <th>Fee</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody id="students-table-body">
@@ -147,7 +151,10 @@
             <div class="tab-content" id="tab-workers">
                 <div class="section-header">
                     <div class="section-title">Staff Workers & Admins</div>
-                    <button class="btn-primary" style="width:auto;" data-modal-open="modal-add-worker">+ Register Worker</button>
+                    <div class="section-header-actions">
+                        <input type="search" id="workers-search" class="table-search" placeholder="Search workers...">
+                        <button class="btn-primary" style="width:auto;" data-modal-open="modal-add-worker">+ Register Worker</button>
+                    </div>
                 </div>
                 <div class="table-container">
                     <table class="data-table">
@@ -171,7 +178,10 @@
             <div class="tab-content" id="tab-payments">
                 <div class="section-header">
                     <div class="section-title">Rent Payments & Billing History</div>
-                    <button class="btn-primary" style="width:auto;" data-modal-open="modal-add-payment">+ Record Payment</button>
+                    <div class="section-header-actions">
+                        <input type="search" id="payments-search" class="table-search" placeholder="Search payments...">
+                        <button class="btn-primary" style="width:auto;" data-modal-open="modal-add-payment">+ Record Payment</button>
+                    </div>
                 </div>
                 <div class="table-container">
                     <table class="data-table">
@@ -266,6 +276,18 @@
                 <div class="form-group">
                     <label class="form-label" for="student_phone">Phone Number</label>
                     <input type="text" id="student_phone" class="form-input" placeholder="9988776655" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="student_father_name">Father's Name</label>
+                    <input type="text" id="student_father_name" class="form-input" placeholder="e.g. John Smith">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="student_father_phone">Father's Phone Number</label>
+                    <input type="text" id="student_father_phone" class="form-input" placeholder="9988776655">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="student_aadhaar_no">Aadhaar No</label>
+                    <input type="text" id="student_aadhaar_no" class="form-input" placeholder="1234 5678 9012">
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="student-room-select">Assign Room</label>

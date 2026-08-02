@@ -1,3 +1,4 @@
+from datetime import date
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from supabase import Client
@@ -37,6 +38,9 @@ def create_payment(
         )
 
     payload = payment_in.model_dump(mode="json")
+    if not payload.get("payment_date"):
+        payload["payment_date"] = date.today().isoformat()
+
     try:
         res = db.table("payments").insert(payload).execute()
         if not res.data:

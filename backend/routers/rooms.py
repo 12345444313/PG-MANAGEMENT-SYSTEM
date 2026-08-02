@@ -63,3 +63,40 @@ def create_room(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Database error creating room: {str(e)}"
         )
+
+
+@router.delete("/{room_id}", summary="Delete a room")
+def delete_room(
+    room_id: int,
+    db: Client = Depends(get_db),
+    current_worker: WorkerResponse = Depends(get_current_worker)
+):
+    room_res = db.table("rooms").select("*").eq("id", room_id).execute()
+    if not room_res.data:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Room with ID {room_id} not found"
+        )
+
+    room = room_res.data[0]
+    if room.get("occupied", 0) > 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot delete room while students are assigned to it"
+        )
+
+    try:
+        delete_res = db.table("rooms").delete().eq("id", room_id).execute()
+        if not delete_res.data:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to delete room"
+            )
+        return {"message": f"Room {room_id} deleted successfully"}
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database error deleting room: {str(e)}"
+        )

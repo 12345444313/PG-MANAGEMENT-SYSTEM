@@ -100,6 +100,9 @@ function initDashboardController() {
         if (avatarEl) avatarEl.textContent = (user.full_name || user.username)[0].toUpperCase();
     }
 
+    bindOverviewRoomSearch();
+    bindTableSearch();
+
     // Bind Logout
     const logoutBtn = document.getElementById("btn-logout");
     if (logoutBtn) {
@@ -130,8 +133,36 @@ function initDashboardController() {
         });
     });
 
-    initModals();
+bindStudentsSearch();
+        initModals();
     loadDashboardData();
+}
+
+function bindOverviewRoomSearch() {
+    const roomsSearch = document.getElementById("rooms-search");
+    if (roomsSearch) {
+        roomsSearch.addEventListener("input", () => renderRooms());
+    }
+}
+
+function bindStudentsSearch() {
+    const studentsSearch = document.getElementById("students-search");
+    if (studentsSearch) {
+        studentsSearch.addEventListener("input", renderStudents);
+    }
+}
+
+function bindTableSearch() {
+    const workersSearch = document.getElementById("workers-search");
+    const paymentsSearch = document.getElementById("payments-search");
+
+    if (workersSearch) {
+        workersSearch.addEventListener("input", renderWorkers);
+    }
+
+    if (paymentsSearch) {
+        paymentsSearch.addEventListener("input", renderPayments);
+    }
 }
 
 async function loadDashboardData() {
@@ -164,52 +195,51 @@ async function loadDashboardData() {
 // RENDERING FUNCTIONS
 function renderOverviewStats() {
     const totalRooms = state.rooms.length;
-    const totalCapacity = state.rooms.reduce((acc, r) => acc + (r.capacity || 0), 0);
-    const totalOccupied = state.rooms.reduce((acc, r) => acc + (r.occupied || 0), 0);
-    const occupancyRate = totalCapacity > 0 ? Math.round((totalOccupied / totalCapacity) * 100) : 0;
     const totalStudents = state.students.length;
-    const totalRevenue = state.payments.reduce((acc, p) => acc + (parseFloat(p.amount) || 0), 0);
 
-    document.getElementById("stat-total-rooms").textContent = totalRooms;
-    document.getElementById("stat-occupancy-rate").textContent = `${occupancyRate}%`;
-    document.getElementById("stat-total-students").textContent = totalStudents;
-    document.getElementById("stat-total-revenue").textContent = `$${totalRevenue.toLocaleString()}`;
+    const totalRoomsEl = document.getElementById("stat-total-rooms");
+    const totalStudentsEl = document.getElementById("stat-total-students");
+
+    if (totalRoomsEl) totalRoomsEl.textContent = totalRooms;
+    if (totalStudentsEl) totalStudentsEl.textContent = totalStudents;
 }
 
 function renderRooms() {
     const container = document.getElementById("rooms-grid-container");
     const containerTab2 = document.getElementById("rooms-grid-container-tab2");
     const roomSelect = document.getElementById("student-room-select");
+    const roomsSearch = document.getElementById("rooms-search");
 
     if (!container) return;
 
-    if (state.rooms.length === 0) {
-        const emptyHtml = `<div style="grid-column: 1/-1; text-align:center; padding:40px; color:var(--text-secondary);">No rooms registered yet.</div>`;
+    const searchTerm = (roomsSearch?.value || "").trim().toLowerCase();
+    const filteredRooms = state.rooms.filter(room => String(room.room_number).toLowerCase().includes(searchTerm));
+
+    if (filteredRooms.length === 0) {
+        const emptyHtml = `<div style="grid-column: 1/-1; text-align:center; padding:40px; color:var(--text-secondary);">No matching rooms found.</div>`;
         container.innerHTML = emptyHtml;
         if (containerTab2) containerTab2.innerHTML = emptyHtml;
+        hideRoomPopup();
         return;
     }
 
-    const html = state.rooms.map(room => {
-        const pct = room.capacity > 0 ? Math.round((room.occupied / room.capacity) * 100) : 0;
+    const html = filteredRooms.map(room => {
         const isFull = room.occupied >= room.capacity;
+        const isSelected = String(room.id) === (window.currentRoomId || "");
         return `
-            <div class="room-card">
+            <div class="room-card ${isSelected ? 'selected' : ''}" data-room-id="${room.id}">
                 <div class="room-header">
                     <div class="room-number">Room ${room.room_number}</div>
                     <div class="room-rent">$${parseFloat(room.rent_amount).toLocaleString()}</div>
                 </div>
-                <div style="font-size:13px; color:var(--text-secondary);">
+                <div style="font-size:13px; color:var(--text-secondary); margin-bottom:12px;">
                     Capacity: ${room.occupied} / ${room.capacity} Occupants
                 </div>
-                <div class="occupancy-bar-bg">
-                    <div class="occupancy-bar-fill" style="width: ${pct}%;"></div>
-                </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
                     <span class="badge ${isFull ? 'badge-full' : 'badge-available'}">
                         ${isFull ? 'Full' : 'Available'}
                     </span>
-                    <span style="font-size:12px; color:var(--text-muted);">${pct}% Occupied</span>
+                    <button class="btn-delete" data-delete-room="${room.id}">Delete</button>
                 </div>
             </div>
         `;
@@ -218,6 +248,51 @@ function renderRooms() {
     container.innerHTML = html;
     if (containerTab2) containerTab2.innerHTML = html;
 
+    const attachRoomCardHandlers = (target) => {
+        target.querySelectorAll(".room-card").forEach(card => {
+            card.addEventListener("click", () => {
+                const roomId = card.getAttribute("data-room-id");
+                window.currentRoomId = roomId;
+                renderRooms();
+                const cardRect = card.getBoundingClientRect();
+                showRoomPopup(roomId, cardRect);
+            });
+        });
+    };
+
+    attachRoomCardHandlers(container);
+    if (containerTab2) attachRoomCardHandlers(containerTab2);
+
+    container.querySelectorAll("[data-delete-room]").forEach(btn => {
+        btn.addEventListener("click", async (event) => {
+            event.stopPropagation();
+            const roomId = Number(btn.getAttribute("data-delete-room"));
+            try {
+                await ApiClient.deleteRoom(roomId);
+                showToast("Room deleted successfully", "success");
+                loadDashboardData();
+            } catch (error) {
+                showToast(error.message || "Failed to delete room", "error");
+            }
+        });
+    });
+
+    if (containerTab2) {
+        containerTab2.querySelectorAll("[data-delete-room]").forEach(btn => {
+            btn.addEventListener("click", async (event) => {
+                event.stopPropagation();
+                const roomId = Number(btn.getAttribute("data-delete-room"));
+                try {
+                    await ApiClient.deleteRoom(roomId);
+                    showToast("Room deleted successfully", "success");
+                    loadDashboardData();
+                } catch (error) {
+                    showToast(error.message || "Failed to delete room", "error");
+                }
+            });
+        });
+    }
+
     if (roomSelect) {
         roomSelect.innerHTML = `<option value="">Select Room (Optional)</option>` + 
             state.rooms
@@ -225,32 +300,137 @@ function renderRooms() {
                 .map(r => `<option value="${r.id}">Room ${r.room_number} ($${r.rent_amount}/mo)</option>`)
                 .join("");
     }
+
+    if (!window.currentRoomId && filteredRooms.length > 0) {
+        window.currentRoomId = String(filteredRooms[0].id);
+        renderRoomResidents(window.currentRoomId);
+    } else if (window.currentRoomId) {
+        renderRoomResidents(window.currentRoomId);
+    }
+}
+
+function showRoomPopup(roomId, cardRect) {
+    const roomPopup = document.getElementById("room-popup-bubble");
+    const roomPopupClose = document.getElementById("room-popup-close");
+    if (!roomPopup) return;
+
+    renderRoomResidents(roomId);
+    roomPopup.classList.remove("hidden");
+
+    const popupWidth = Math.min(320, window.innerWidth - 32);
+    const popupHeight = Math.min(260, window.innerHeight - 80);
+    const left = Math.min(window.innerWidth - popupWidth - 20, Math.max(16, cardRect.right + 18));
+    const top = Math.min(window.innerHeight - popupHeight - 20, Math.max(16, cardRect.top + window.scrollY));
+
+    roomPopup.style.width = `${popupWidth}px`;
+    roomPopup.style.height = `${popupHeight}px`;
+    roomPopup.style.left = `${left}px`;
+    roomPopup.style.top = `${top}px`;
+
+    if (roomPopupClose) {
+        roomPopupClose.onclick = () => hideRoomPopup();
+    }
+}
+
+function hideRoomPopup() {
+    const roomPopup = document.getElementById("room-popup-bubble");
+    if (roomPopup) roomPopup.classList.add("hidden");
+}
+
+function renderRoomResidents(roomId) {
+    const roomDetailContent = document.getElementById("room-detail-content");
+    const popupTitle = document.querySelector("#room-popup-bubble .room-popup-title");
+    if (!roomDetailContent) return;
+
+    const room = state.rooms.find(r => String(r.id) === String(roomId));
+    const students = state.students.filter(student => String(student.room_id) === String(roomId));
+
+    if (popupTitle && room) {
+        popupTitle.textContent = `Room ${room.room_number} Residents`;
+    }
+
+    if (!room) {
+        roomDetailContent.textContent = "No room selected.";
+        return;
+    }
+
+    if (students.length === 0) {
+        roomDetailContent.innerHTML = `<div class="room-detail-item">No students assigned to Room ${room.room_number}.</div>`;
+        return;
+    }
+
+    roomDetailContent.innerHTML = students.map(student => `
+        <div class="room-detail-item">
+            <div class="name">${student.full_name}</div>
+            <div class="meta">${student.email} • ${student.phone}</div>
+            <div class="meta">Status: ${student.status}</div>
+        </div>
+    `).join("");
 }
 
 function renderStudents() {
     const tbody = document.getElementById("students-table-body");
     const studentSelect = document.getElementById("payment-student-select");
+    const studentsSearch = document.getElementById("students-search");
     if (!tbody) return;
 
-    if (state.students.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:var(--text-secondary);">No students registered yet.</td></tr>`;
+    const searchTerm = (studentsSearch?.value || "").trim().toLowerCase();
+    const filteredStudents = state.students.filter(student => {
+        const room = state.rooms.find(r => r.id === student.room_id);
+        const haystack = [
+            student.full_name,
+            student.father_name || "",
+            student.aadhaar_no || "",
+            student.email,
+            student.phone,
+            student.father_phone || "",
+            room ? `Room ${room.room_number}` : ""
+        ].join(" ").toLowerCase();
+        return haystack.includes(searchTerm);
+    });
+
+    if (filteredStudents.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; padding:30px; color:var(--text-secondary);">No students match your search.</td></tr>`;
         return;
     }
 
-    tbody.innerHTML = state.students.map(s => {
+    tbody.innerHTML = filteredStudents.map(s => {
         const room = state.rooms.find(r => r.id === s.room_id);
         const roomText = room ? `Room ${room.room_number}` : 'Unassigned';
+        const paidAmount = state.payments
+            .filter(payment => Number(payment.student_id) === Number(s.id))
+            .reduce((sum, payment) => sum + (Number(payment.amount) || 0), 0);
+        const feeStatus = paidAmount > 0 ? 'Paid' : 'Not Paid';
+        const feeBadge = feeStatus === 'Paid' ? 'badge-completed' : 'badge-pending';
         return `
             <tr>
                 <td><strong>#${s.id}</strong></td>
                 <td>${s.full_name}</td>
+                <td>${s.father_name || '-'}</td>
+                <td>${s.aadhaar_no || '-'}</td>
                 <td>${s.email}</td>
                 <td>${s.phone}</td>
+                <td>${s.father_phone || '-'}</td>
                 <td><span class="badge badge-active">${roomText}</span></td>
                 <td><span class="badge badge-completed">${s.status}</span></td>
+                <td><span class="badge ${feeBadge}">${feeStatus}</span></td>
+                <td><button class="btn-delete" data-delete-student="${s.id}">Delete</button></td>
             </tr>
         `;
     }).join("");
+
+    tbody.querySelectorAll("[data-delete-student]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+            const studentId = Number(btn.getAttribute("data-delete-student"));
+            try {
+                await ApiClient.deleteStudent(studentId);
+                showToast("Student deleted successfully", "success");
+                loadDashboardData();
+            } catch (error) {
+                showToast(error.message || "Failed to delete student", "error");
+            }
+        });
+    });
 
     if (studentSelect) {
         studentSelect.innerHTML = `<option value="">Select Student</option>` + 
@@ -260,14 +440,21 @@ function renderStudents() {
 
 function renderWorkers() {
     const tbody = document.getElementById("workers-table-body");
+    const workersSearch = document.getElementById("workers-search");
     if (!tbody) return;
 
-    if (state.workers.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px; color:var(--text-secondary);">No workers registered.</td></tr>`;
+    const searchTerm = (workersSearch?.value || "").trim().toLowerCase();
+    const filteredWorkers = state.workers.filter(w => {
+        const haystack = [w.username, w.full_name, w.email, w.role].filter(Boolean).join(" ").toLowerCase();
+        return haystack.includes(searchTerm);
+    });
+
+    if (filteredWorkers.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px; color:var(--text-secondary);">No workers match your search.</td></tr>`;
         return;
     }
 
-    tbody.innerHTML = state.workers.map(w => `
+    tbody.innerHTML = filteredWorkers.map(w => `
         <tr>
             <td><strong>#${w.id}</strong></td>
             <td>${w.username}</td>
@@ -280,14 +467,23 @@ function renderWorkers() {
 
 function renderPayments() {
     const tbody = document.getElementById("payments-table-body");
+    const paymentsSearch = document.getElementById("payments-search");
     if (!tbody) return;
 
-    if (state.payments.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:var(--text-secondary);">No payment records found.</td></tr>`;
+    const searchTerm = (paymentsSearch?.value || "").trim().toLowerCase();
+    const filteredPayments = state.payments.filter(p => {
+        const student = state.students.find(s => s.id === p.student_id);
+        const studentName = student ? student.full_name : `Student #${p.student_id}`;
+        const haystack = [studentName, p.amount, p.payment_date, p.payment_method, p.status].filter(Boolean).join(" ").toLowerCase();
+        return haystack.includes(searchTerm);
+    });
+
+    if (filteredPayments.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:var(--text-secondary);">No payment records match your search.</td></tr>`;
         return;
     }
 
-    tbody.innerHTML = state.payments.map(p => {
+    tbody.innerHTML = filteredPayments.map(p => {
         const student = state.students.find(s => s.id === p.student_id);
         const studentName = student ? student.full_name : `Student #${p.student_id}`;
         return `

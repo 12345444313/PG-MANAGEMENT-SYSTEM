@@ -63,6 +63,9 @@ def create_student(
         "full_name": student_in.full_name.strip(),
         "email": email_clean,
         "phone": student_in.phone.strip(),
+        "father_name": student_in.father_name.strip() if student_in.father_name else None,
+        "father_phone": student_in.father_phone.strip() if student_in.father_phone else None,
+        "aadhaar_no": student_in.aadhaar_no.strip() if student_in.aadhaar_no else None,
         "room_id": student_in.room_id,
         "joining_date": joining_date_val,
         "status": student_in.status or "active"
@@ -90,4 +93,46 @@ def create_student(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Database error creating student: {str(e)}"
+        )
+
+
+@router.delete("/{student_id}", summary="Delete a student")
+def delete_student(
+    student_id: int,
+    db: Client = Depends(get_db),
+    current_worker: WorkerResponse = Depends(get_current_worker)
+):
+    student_res = db.table("students").select("*",).eq("id", student_id).execute()
+    if not student_res.data:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Student with ID {student_id} not found"
+        )
+
+    student = student_res.data[0]
+    room_id = student.get("room_id")
+
+    try:
+        delete_res = db.table("students").delete().eq("id", student_id).execute()
+        if not delete_res.data:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to delete student"
+            )
+
+        if room_id:
+            room_res = db.table("rooms").select("*",).eq("id", room_id).execute()
+            if room_res.data:
+                room = room_res.data[0]
+                new_occupied = max(0, room.get("occupied", 0) - 1)
+                new_status = "available" if new_occupied < room.get("capacity", 0) else "full"
+                db.table("rooms").update({"occupied": new_occupied, "status": new_status}).eq("id", room_id).execute()
+
+        return {"message": f"Student {student_id} deleted successfully"}
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database error deleting student: {str(e)}"
         )
