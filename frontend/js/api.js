@@ -2,7 +2,12 @@
    PG MANAGEMENT SYSTEM - API CLIENT WRAPPER
    ============================================================ */
 
-const API_BASE_URL = "https://pg-management-system-hnlh.onrender.com"; // Replace with your Render backend URL
+// Set this to your deployed backend URL.
+// - For local dev: use "http://127.0.0.1:8000"
+// - For production: replace with your Render URL (no trailing slash)
+const API_BASE_URL =
+    (typeof window !== "undefined" && window.PG_API_BASE_URL) ||
+    "https://pg-management-system-hnlh.onrender.com";
 
 const ApiClient = {
     getToken() {
@@ -20,7 +25,11 @@ const ApiClient = {
 
     getUser() {
         const user = localStorage.getItem("worker_user");
-        return user ? JSON.parse(user) : null;
+        try {
+            return user ? JSON.parse(user) : null;
+        } catch (_) {
+            return null;
+        }
     },
 
     setUser(user) {
@@ -29,7 +38,7 @@ const ApiClient = {
 
     async request(endpoint, options = {}) {
         const url = `${API_BASE_URL}${endpoint}`;
-        const headers = options.headers || {};
+        const headers = Object.assign({}, options.headers || {});
 
         const token = this.getToken();
         if (token && !headers["Authorization"]) {
@@ -40,33 +49,47 @@ const ApiClient = {
             headers["Content-Type"] = "application/json";
         }
 
-        const config = {
-            ...options,
-            headers
-        };
+        const config = Object.assign({}, options, { headers });
 
+        let response;
         try {
-            const response = await fetch(url, config);
-
-            // Handle Unauthorized redirect
-            if (response.status === 401 && !endpoint.includes("/auth/login")) {
-                this.clearAuth();
-                window.location.href = "login.html";
-                throw new Error("Session expired. Please log in again.");
-            }
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                const errorMessage = data.detail || "An error occurred while processing request";
-                throw new Error(errorMessage);
-            }
-
-            return data;
-        } catch (error) {
-            console.error(`API Error [${endpoint}]:`, error);
-            throw error;
+            response = await fetch(url, config);
+        } catch (networkErr) {
+            // Network / CORS / DNS failure
+            throw new Error(
+                "Cannot reach the backend server. Please check your connection or try again later."
+            );
         }
+
+        // Handle Unauthorized redirect (but skip the login endpoint itself)
+        if (response.status === 401 && !String(endpoint).includes("/auth/login")) {
+            this.clearAuth();
+            // Only redirect if we aren't already on the login page
+            if (!window.location.pathname.endsWith("login.html")) {
+                window.location.href = "login.html";
+            }
+            throw new Error("Session expired. Please log in again.");
+        }
+
+        // Try to parse JSON regardless of status
+        let data = null;
+        const text = await response.text();
+        if (text) {
+            try {
+                data = JSON.parse(text);
+            } catch (_) {
+                data = { detail: text };
+            }
+        }
+
+        if (!response.ok) {
+            const message =
+                (data && (data.detail || data.message)) ||
+                `Request failed with status ${response.status}`;
+            throw new Error(message);
+        }
+
+        return data;
     },
 
     // Auth API
@@ -75,7 +98,7 @@ const ApiClient = {
             method: "POST",
             body: JSON.stringify({ username, password })
         });
-        if (response.access_token) {
+        if (response && response.access_token) {
             this.setToken(response.access_token);
             this.setUser(response.worker);
         }
@@ -155,4 +178,5 @@ const ApiClient = {
     }
 };
 
-export default ApiClient;
+// Expose globally so plain <script> tags (no module system) can use it
+window.ApiClient = ApiClient;

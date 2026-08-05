@@ -11,8 +11,18 @@ env/
 # Python bytecode
 __pycache__/
 *.py[cod]
+*$py.class
 
 # Node / Dependencies
 node_modules/
 dist/
 .next/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.idea/
+.vscode/
+*.swp

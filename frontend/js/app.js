@@ -133,8 +133,8 @@ function initDashboardController() {
         });
     });
 
-bindStudentsSearch();
-        initModals();
+    bindStudentsSearch();
+    initModals();
     loadDashboardData();
 }
 
@@ -649,11 +649,4 @@ function initModals() {
             }
         });
     }
-    import ApiClient from "./api.js";
-
-    async function init() {
-        const workers = await ApiClient.getWorkers();
-        console.log("Workers:", workers);
-    }
-    init();
 }
